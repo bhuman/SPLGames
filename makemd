@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+cd "$(dirname "$(which "$0")")"
+
+# Remove Windows line endings from csv file and replace ';' by ','
+tr <videos_and_logs.csv -d '\r' | tr ';' ',' >/tmp/makemd.tmp && mv /tmp/makemd.tmp videos_and_logs.csv
+
+# Output table header
+echo >README.md "| Event | Time | F | ½ | # | Team A | Team B | Video | GC Log | TCM Log |"
+echo >>README.md "|:--|:--|:--:|:--:|:--:|:--|:--|:--:|:--:|:--:|"
+
+# Append table from csv and use non-breaking spaces and hyphens in some places
+tail <videos_and_logs.csv -n +2 \
+| tr ' ' ' ' \
+| sed >>README.md \
+  -e 's%\,\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\),\([^,]*\)% | \1 | \2 | \3 | \4 | \5 | \6 | [video](\7) | [GC](\8) | [TCM](\9) |%' -e 's%^%| %' \
+  -e 's%\([0-9]*\)-\([0-9]*\)-\([0-9]*\)%\1‑\2‑\3%' -e 's%\[video\]() %%'
